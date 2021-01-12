@@ -33,7 +33,8 @@ class UserSeeder extends Seeder
         $userSuperadmin = User::create([
             'email' => 'benoit.lemaire78@gmail.com',
             'password' => bcrypt('testtest'),
-            'name' => 'Benoit Lemaire'
+            'name' => 'Benoit Lemaire',
+            'validated' => true
         ]);
 
         for ($i = 0; $i < 10; $i++) {

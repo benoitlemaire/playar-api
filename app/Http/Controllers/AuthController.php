@@ -1,12 +1,14 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Http\Resources\UserResource;
 use App\Mail\SignupCompanyRequest;
 use App\Mail\SignupFreelanceRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Validator;
 
 
@@ -18,7 +20,7 @@ class AuthController extends Controller
      * @return void
      */
     public function __construct() {
-        $this->middleware('auth:api', ['except' => ['login', 'register']]);
+        $this->middleware('auth:api', ['except' => ['login', 'registerFreelance']]);
     }
 
     /**
@@ -79,43 +81,37 @@ class AuthController extends Controller
      * @return \Illuminate\Http\JsonResponse
      */
     public function registerFreelance(Request $request) {
-        $validator = Validator::make($request->all(), [
+        request()->validate([
             'name' => 'required|string|between:2,100',
             'email' => 'required|string|email|max:100|unique:users',
             'password' => 'required|string|confirmed|min:6',
+            'document_freelance' => 'required|mimes:pdf|max:1000',
+            'instagram_account' => 'required|string|min:2',
+            'filter_video' => 'required|mimes:mp4,mov,ogg,qt | max:20000',
+            'phone' => 'required|min:10|numeric',
         ]);
 
-        if($validator->fails()){
-            return response()->json($validator->errors()->toJson(), 400);
-        }
+        $pdf_file = Storage::disk('s3')->put('pdf', $request->document_freelance, 'public' );
+        $video_file = Storage::disk('s3')->put('videos', $request->filter_video, 'public' );
 
-  //      $freelance = User::create(array_merge(
-//            $validator->validated(),
-//            ['password' => bcrypt($request->password)]
-//        ));
-//
-//        $freelance->attachRole('freelance');
-//
-//        Mail::to($freelance->email)->queue(new SignupFreelanceRequest($freelance));
-//        return response()->json([
-//            'message' => 'Freelance successfully registered',
-//            'freelance' => $freelance
-//        ],201);
+        $freelance = User::create([
+                   'email' => $request->email,
+                   'password' => bcrypt($request->password),
+                   'name' => $request->name,
+                   'phone' => $request->phone,
+                   'document_freelance' => Storage::disk('s3')->url($pdf_file),
+                   'filter_video' => Storage::disk('s3')->url($video_file),
+                   'instagram_account' => $request->instagram_account
+               ]);
+
+        $freelance->attachRole('freelance');
+
+        Mail::to($freelance->email)->queue(new SignupFreelanceRequest($freelance));
+        return response()->json([
+            'message' => 'Freelance successfully registered',
+            'freelance' => $freelance
+        ],201);
     }
-
-    public function saveImage(Request $request) {
-        // Validate (size is in KB)
-        $request->validate([
-            'photo' => 'required|file|image|size:1024|dimensions:max_width=500,max_height=500',
-        ]);
-
-        // Read file contents...
-        $contents = file_get_contents($request->photo->path());
-
-        // ...or just move it somewhere else (eg: local `storage` directory or S3)
-        $newPath = $request->photo->store('photos', 's3');
-    }
-
 
     /**
      * Log the user out (Invalidate the token).
@@ -143,7 +139,7 @@ class AuthController extends Controller
      * @return \Illuminate\Http\JsonResponse
      */
     public function me() {
-        return response()->json(auth()->user());
+        return new UserResource(auth()->user());
     }
 
     /**
@@ -157,7 +153,7 @@ class AuthController extends Controller
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth()->factory()->getTTL() * 60,
+            'expires_in' => auth()->factory()->getTTL() * 43800,
             'user' => auth()->user()
         ]);
     }

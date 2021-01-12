@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\PasswordController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
@@ -28,9 +30,13 @@ Route::group([
     Route::post('/me', [AuthController::class, 'me']);
 });
 
+
+Route::post('/toggleUser', [UserController::class, 'toggleValidationUser']);
+Route::get('/users', [UserController::class, 'getAllUsers']);
+
 Route::group([
     'prefix' => 'password'
 ],function (){
-    Route::post('create', [App\Http\Controllers\PasswordController::class, 'create']);
-    Route::post('reset', [App\Http\Controllers\PasswordController::class, 'reset']);
+    Route::post('create', [PasswordController::class, 'create']);
+    Route::post('reset', [PasswordController::class, 'reset']);
 });
