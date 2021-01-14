@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\OfferController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
@@ -17,23 +18,35 @@ use App\Http\Controllers\AuthController;
 |
 */
 
+// Authentification
 Route::group([
     'middleware' => 'api',
     'prefix' => 'auth'
 
 ], function ($router) {
+    Route::get('/me', [AuthController::class, 'me']);
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/company/register', [AuthController::class, 'registerCompany']);
     Route::post('/freelance/register', [AuthController::class, 'registerFreelance']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/refresh', [AuthController::class, 'refresh']);
-    Route::post('/me', [AuthController::class, 'me']);
 });
 
+// Users
+Route::get('/users', [UserController::class, 'index']);
+Route::get('/users/{user}', [UserController::class, 'show']);
+Route::post('/toggleUser/{user}', [UserController::class, 'toggleValidationUser']);
+Route::post('/editUser/{user}', [UserController::class, 'update']);
+Route::post('/deleteUser/{user}', [UserController::class, 'destroy']);
 
-Route::post('/toggleUser', [UserController::class, 'toggleValidationUser']);
-Route::get('/users', [UserController::class, 'getAllUsers']);
+// Offers
+Route::get('/offers', [OfferController::class, 'index']);
+Route::get('/offers/{offer}', [OfferController::class, 'show']);
+Route::post('/offers/', [OfferController::class, 'create']);
+Route::post('/editOffer/{offer}', [OfferController::class, 'update']);
+Route::post('/deleteOffer/{offer}', [OfferController::class, 'destroy']);
 
+// Password Reset
 Route::group([
     'prefix' => 'password'
 ],function (){
