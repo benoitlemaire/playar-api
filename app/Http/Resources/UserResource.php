@@ -22,7 +22,8 @@ class UserResource extends JsonResource
             'filter_video' => $this->filter_video,
             'phone' => $this->phone,
             'validated' => $this->validated,
-            'roles' => RoleResource::collection($this->roles)
+            'roles' => RoleResource::collection($this->roles),
+            'offers' => OfferResource::collection($this->offers)
         ];
     }
 }

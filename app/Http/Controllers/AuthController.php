@@ -4,16 +4,19 @@ namespace App\Http\Controllers;
 use App\Http\Resources\UserResource;
 use App\Mail\SignupCompanyRequest;
 use App\Mail\SignupFreelanceRequest;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
-use Validator;
-
+use Illuminate\Support\Facades\Validator;
+use App\Traits\UploadFile;
 
 class AuthController extends Controller
 {
+    use UploadFile;
+
     /**
      * Create a new AuthController instance.
      *
@@ -26,7 +29,8 @@ class AuthController extends Controller
     /**
      * Get a JWT via given credentials.
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @param Request $request
+     * @return JsonResponse
      */
     public function login(Request $request){
         $validator = Validator::make($request->all(), [
@@ -48,7 +52,8 @@ class AuthController extends Controller
     /**
      * Register a Company.
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @param Request $request
+     * @return JsonResponse
      */
     public function registerCompany(Request $request) {
         $validator = Validator::make($request->all(), [
@@ -78,7 +83,8 @@ class AuthController extends Controller
     /**
      * Register a Freelance.
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @param Request $request
+     * @return JsonResponse
      */
     public function registerFreelance(Request $request) {
         request()->validate([
@@ -87,20 +93,21 @@ class AuthController extends Controller
             'password' => 'required|string|confirmed|min:6',
             'document_freelance' => 'required|mimes:pdf|max:1000',
             'instagram_account' => 'required|string|min:2',
-            'filter_video' => 'required|mimes:mp4,mov,ogg,qt | max:20000',
+            'filter_video' => 'required|mimes:mp4,mov,ogg,qt|max:20000',
             'phone' => 'required|min:10|numeric',
         ]);
 
-        $pdf_file = Storage::disk('s3')->put('pdf', $request->document_freelance, 'public' );
-        $video_file = Storage::disk('s3')->put('videos', $request->filter_video, 'public' );
+
+        $pdf_file = $this->storeToS3('pdf', $request->document_freelance);
+        $video_file = $this->storeToS3('videos', $request->filter_video);
 
         $freelance = User::create([
                    'email' => $request->email,
                    'password' => bcrypt($request->password),
                    'name' => $request->name,
                    'phone' => $request->phone,
-                   'document_freelance' => Storage::disk('s3')->url($pdf_file),
-                   'filter_video' => Storage::disk('s3')->url($video_file),
+                   'document_freelance' => $this->getS3Url($pdf_file),
+                   'filter_video' => $this->getS3Url($video_file),
                    'instagram_account' => $request->instagram_account
                ]);
 
@@ -116,7 +123,7 @@ class AuthController extends Controller
     /**
      * Log the user out (Invalidate the token).
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function logout() {
         auth()->logout();
@@ -127,7 +134,7 @@ class AuthController extends Controller
     /**
      * Refresh a token.
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function refresh() {
         return $this->createNewToken(auth()->refresh());
@@ -136,7 +143,7 @@ class AuthController extends Controller
     /**
      * Get the authenticated User.
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return UserResource
      */
     public function me() {
         return new UserResource(auth()->user());
@@ -147,13 +154,13 @@ class AuthController extends Controller
      *
      * @param  string $token
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     protected function createNewToken($token){
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth()->factory()->getTTL() * 43800,
+            'expires_in' => auth()->factory()->getTTL() * 9999999999999,
             'user' => auth()->user()
         ]);
     }

@@ -4,7 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+
 
 class UserController extends Controller
 {
@@ -18,20 +22,57 @@ class UserController extends Controller
         $this->middleware('auth:api');
     }
 
-    public function getAllUsers()
+    public function index()
     {
         return UserResource::collection(User::all());
     }
 
-    public function toggleValidationUser(Request $request)
+    /**
+     * Display the specified resource.
+     *
+     * @param User $user
+     * @return JsonResponse
+     */
+    public function show(User $user)
     {
-        $user = User::where('email', $request->email)->first();
-        if (!$user) {
-            return response()->json([
-                'message' => 'User not found',
-            ],404);
-        }
+        return response()->json([
+            'user' => new UserResource($user)
+        ],201);
+    }
 
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param Request $request
+     * @param User $user
+     * @return JsonResponse
+     */
+    public function update(Request $request, User $user)
+    {
+        // Todo : Faire une route pour update une company et une autre pour update un freelance et supprimer l'image dans S3 comme pour ooffers
+        $user->update($request->all());
+
+        return response()->json([
+            'user' => new UserResource($user)
+        ],201);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param User $user
+     * @return JsonResponse
+     * @throws Exception
+     */
+    public function destroy(User $user)
+    {
+        $user->delete();
+
+        return response()->json([],200);
+    }
+
+    public function toggleValidationUser(User $user)
+    {
         $user->validated = !$user->validated;
         $user->save();
 

@@ -44,19 +44,6 @@ class User extends Authenticatable implements JWTSubject
         'remember_token',
     ];
 
-    public function urlImageS3($url)
-    {
-        if ($url) {
-            try {
-                return Storage::disk('s3')->url($url);
-            } catch (AwsException $e) {
-                return $e->getAwsErrorMessage();
-            }
-        }
-
-        return '';
-    }
-
     /**
      * The attributes that should be cast to native types.
      *
@@ -72,7 +59,8 @@ class User extends Authenticatable implements JWTSubject
      *
      * @return mixed
      */
-    public function getJWTIdentifier() {
+    public function getJWTIdentifier()
+    {
         return $this->getKey();
     }
 
@@ -81,7 +69,13 @@ class User extends Authenticatable implements JWTSubject
      *
      * @return array
      */
-    public function getJWTCustomClaims() {
+    public function getJWTCustomClaims()
+    {
         return [];
+    }
+
+    public function offers()
+    {
+        return $this->hasMany(Offer::class);
     }
 }
