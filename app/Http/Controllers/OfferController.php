@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use App\Traits\UploadFile;
+use Illuminate\Support\Facades\DB;
 
 class OfferController extends Controller
 {
@@ -31,12 +32,45 @@ class OfferController extends Controller
      */
     public function index()
     {
-        return OfferResource::collection(Offer::all());
+        $offers = Offer::all();
+        return OfferResource::collection($offers->load('user'));
+    }
+
+    public function apply(Offer $offer)
+    {
+        $user = auth()->user();
+        $hasApplied = DB::table('offer_user')
+            ->select('*')
+            ->where('offer_id', '=', $offer->id)
+            ->where('user_id', '=', $user->id)
+            ->get();
+
+        if ($hasApplied->isEmpty()) {
+            DB::table('offer_user')->insert([
+                'offer_id' => $offer->id,
+                'user_id' => auth()->user()->id
+            ]);
+
+            return response()->json([
+                'message' => $user->name . ' successfully applied to offer : ' . $offer->title
+            ]);
+        }
+
+        DB::table('offer_user')
+            ->where('offer_id', '=', $offer->id)
+            ->where('user_id', '=', $user->id)
+            ->delete();
+
+        return response()->json([
+            'message' => 'Apply removed !'
+        ]);
+
     }
 
     /**
      * Create a new resource
      *
+     * @param Request $request
      * @return OfferResource
      */
     public function create(Request $request)
@@ -49,7 +83,7 @@ class OfferController extends Controller
 
         $logo_path = $this->storeToS3('offers', $request->company_logo);
 
-        $offer = Offer::updateOrCreate([
+        $offer = Offer::create([
             'title' => $request->title,
             'description' => $request->description,
             'company_logo' => $this->getS3Url($logo_path),
@@ -73,7 +107,7 @@ class OfferController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param Request $request
      * @param Offer $offer
      * @return OfferResource
      */

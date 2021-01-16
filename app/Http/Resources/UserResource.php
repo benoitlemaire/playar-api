@@ -15,6 +15,7 @@ class UserResource extends JsonResource
     public function toArray($request)
     {
         return [
+            'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
             'document_freelance' => $this->document_freelance,
@@ -22,8 +23,8 @@ class UserResource extends JsonResource
             'filter_video' => $this->filter_video,
             'phone' => $this->phone,
             'validated' => $this->validated,
-            'roles' => RoleResource::collection($this->roles),
-            'offers' => OfferResource::collection($this->offers)
+            'roles' => RoleResource::collection($this->whenLoaded('roles')),
+            'offers' => OfferResource::collection($this->whenLoaded('offers'))
         ];
     }
 }

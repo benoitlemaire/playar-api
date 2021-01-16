@@ -20,7 +20,7 @@ class OfferResource extends JsonResource
             'title' => $this->title,
             'description' => $this->description,
             'company_logo' => $this->company_logo,
-            'user' => $this->user,
+            'user' => new UserResource($this->whenLoaded('user')),
         ];
     }
 }

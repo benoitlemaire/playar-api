@@ -24,7 +24,8 @@ class UserController extends Controller
 
     public function index()
     {
-        return UserResource::collection(User::all());
+        $users = User::all();
+        return UserResource::collection($users->load('offers', 'roles'));
     }
 
     /**
@@ -36,7 +37,7 @@ class UserController extends Controller
     public function show(User $user)
     {
         return response()->json([
-            'user' => new UserResource($user)
+            'user' => new UserResource($user->load('roles', 'offers'))
         ],201);
     }
 
@@ -53,7 +54,7 @@ class UserController extends Controller
         $user->update($request->all());
 
         return response()->json([
-            'user' => new UserResource($user)
+            'user' => new UserResource($user->load('roles', 'offers'))
         ],201);
     }
 
