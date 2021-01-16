@@ -33,8 +33,8 @@ Route::group([
 });
 
 // Users
-Route::get('/users', [UserController::class, 'index']);
-Route::get('/users/{user}', [UserController::class, 'show']);
+Route::get('/users', [UserController::class, 'index'])->middleware('IsSuperAdmin');;
+Route::get('/users/{user}', [UserController::class, 'show'])->middleware('CanSeeUserProfile');
 Route::post('/toggleUser/{user}', [UserController::class, 'toggleValidationUser']);
 Route::post('/editUser/{user}', [UserController::class, 'update']);
 Route::post('/deleteUser/{user}', [UserController::class, 'destroy']);
@@ -45,6 +45,7 @@ Route::get('/offers/{offer}', [OfferController::class, 'show']);
 Route::post('/offers/', [OfferController::class, 'create']);
 Route::post('/editOffer/{offer}', [OfferController::class, 'update']);
 Route::post('/deleteOffer/{offer}', [OfferController::class, 'destroy']);
+Route::post('/applyToOffer/{offer}', [OfferController::class, 'apply']);
 
 // Password Reset
 Route::group([
