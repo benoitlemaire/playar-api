@@ -14,8 +14,8 @@ class CreateOfferUserTable extends Migration
     public function up()
     {
         Schema::create('offer_user', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+            $table->foreignId('offer_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
         });
     }
 

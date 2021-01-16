@@ -37,7 +37,7 @@ class UserSeeder extends Seeder
             'validated' => true
         ]);
 
-        for ($i = 0; $i < 10; $i++) {
+        for ($i = 0; $i < 50; $i++) {
             $userCompany = User::create([
                 'email' => $faker->email(),
                 'password' => bcrypt('testtest'),

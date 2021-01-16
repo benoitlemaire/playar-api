@@ -16,14 +16,14 @@ class OfferSeeder extends Seeder
     public function run()
     {
         $faker = Faker::create();
-        $offers_count = rand(10, 35);
+        $offers_count = rand(50, 100);
 
         for ($i = 0; $i < $offers_count; $i++) {
             Offer::create([
                 'title' => $faker->sentence(10, true),
                 'description' => $faker->text(2500),
                 'company_logo' => $faker->imageUrl(200,200),
-                'user_id' => $faker->numberBetween(0, 21),
+                'user_id' => $faker->numberBetween(1, 50),
             ]);
 
         }
