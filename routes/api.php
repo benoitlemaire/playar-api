@@ -45,9 +45,8 @@ Route::get('/offers/{offer}', [OfferController::class, 'show']);
 Route::post('/offers/', [OfferController::class, 'create']);
 Route::post('/editOffer/{offer}', [OfferController::class, 'update']);
 Route::post('/deleteOffer/{offer}', [OfferController::class, 'destroy']);
-Route::post('/applyToOffer/{offer}', [OfferController::class, 'apply']);
+Route::post('/applyToOffer/{offer}', [OfferController::class, 'apply'])->middleware(['role:freelance|superadmin', 'IsValidated']);
 
-// Password Reset
 Route::group([
     'prefix' => 'password'
 ],function (){

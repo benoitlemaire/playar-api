@@ -15,7 +15,7 @@ class Offer extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function usersApplied()
+    public function apply()
     {
         return $this->belongsToMany(User::class);
     }

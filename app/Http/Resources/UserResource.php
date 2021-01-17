@@ -24,7 +24,8 @@ class UserResource extends JsonResource
             'phone' => $this->phone,
             'validated' => $this->validated,
             'roles' => RoleResource::collection($this->whenLoaded('roles')),
-            'offers' => OfferResource::collection($this->whenLoaded('offers'))
+            'myOffers' => OfferResource::collection($this->whenLoaded('myOffers')),
+            'myApplies' => OfferResource::collection($this->whenLoaded('myApplies'))
         ];
     }
 }

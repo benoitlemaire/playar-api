@@ -2,11 +2,10 @@
 
 namespace App\Http\Middleware;
 
-use App\Http\Resources\UserResource;
 use Closure;
 use Illuminate\Http\Request;
 
-class IsSuperAdmin
+class IsValidated
 {
     /**
      * Handle an incoming request.
@@ -17,10 +16,11 @@ class IsSuperAdmin
      */
     public function handle(Request $request, Closure $next)
     {
-       if (auth()->user()->hasRole('superadmin')) {
-           return $next($request);
-       }
+        $user = auth()->user();
+        if (!$user->validated) {
+            return response()->json(['error' => 'You need to be validated before applying to this offer.'], 403);
+        }
 
-        return response()->json(['error' => 'Unauthenticated.'], 403);
+        return $next($request);
     }
 }

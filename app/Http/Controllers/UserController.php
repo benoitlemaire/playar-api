@@ -7,9 +7,14 @@ use App\Models\User;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 
 
+/**
+ * Class UserController
+ * @package App\Http\Controllers
+ */
 class UserController extends Controller
 {
     /**
@@ -22,6 +27,9 @@ class UserController extends Controller
         $this->middleware('auth:api');
     }
 
+    /**
+     * @return AnonymousResourceCollection
+     */
     public function index()
     {
         $users = User::all();
@@ -37,7 +45,7 @@ class UserController extends Controller
     public function show(User $user)
     {
         return response()->json([
-            'user' => new UserResource($user->load('roles', 'offers'))
+            'user' => new UserResource($user->load('roles', 'myOffers', 'myApply'))
         ],201);
     }
 
@@ -72,6 +80,10 @@ class UserController extends Controller
         return response()->json([],200);
     }
 
+    /**
+     * @param User $user
+     * @return JsonResponse
+     */
     public function toggleValidationUser(User $user)
     {
         $user->validated = !$user->validated;

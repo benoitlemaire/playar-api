@@ -11,6 +11,10 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use App\Traits\UploadFile;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Class OfferController
+ * @package App\Http\Controllers
+ */
 class OfferController extends Controller
 {
     use UploadFile;
@@ -36,35 +40,27 @@ class OfferController extends Controller
         return OfferResource::collection($offers->load('user'));
     }
 
+    /**
+     * @param Offer $offer
+     * @return JsonResponse
+     */
     public function apply(Offer $offer)
     {
         $user = auth()->user();
-        $hasApplied = DB::table('offer_user')
-            ->select('*')
-            ->where('offer_id', '=', $offer->id)
-            ->where('user_id', '=', $user->id)
-            ->get();
 
-        if ($hasApplied->isEmpty()) {
-            DB::table('offer_user')->insert([
-                'offer_id' => $offer->id,
-                'user_id' => auth()->user()->id
-            ]);
+        if ($user->myApplies->contains($offer)) {
+            $user->myApplies()->detach($offer->id);
 
             return response()->json([
-                'message' => $user->name . ' successfully applied to offer : ' . $offer->title
+                'message' => 'Apply removed !'
             ]);
         }
 
-        DB::table('offer_user')
-            ->where('offer_id', '=', $offer->id)
-            ->where('user_id', '=', $user->id)
-            ->delete();
+        $user->myApplies()->attach($offer->id);
 
         return response()->json([
-            'message' => 'Apply removed !'
+            'message' => $user->name . ' successfully applied to offer : ' . $offer->title
         ]);
-
     }
 
     /**
@@ -101,7 +97,7 @@ class OfferController extends Controller
      */
     public function show(Offer $offer)
     {
-        return new OfferResource($offer);
+        return new OfferResource($offer->load('user', 'apply'));
     }
 
     /**
@@ -117,18 +113,12 @@ class OfferController extends Controller
         if ($request->company_logo) {
             $this->removeS3File($offer->company_logo, 'offers');
             $logo_path = $this->storeToS3('offers', $request->company_logo);
-
-            $offer->update([
-                'title' => $request->title,
-                'description' => $request->description,
-                'company_logo' => $this->getS3Url($logo_path),
-                'user_id' => auth()->user()['id'],
-            ]);
         }
 
         $offer->update([
             'title' => $request->title,
             'description' => $request->description,
+            'company_logo' => $logo_path ? $this->getS3Url($logo_path) : null,
             'user_id' => auth()->user()['id'],
         ]);
 
