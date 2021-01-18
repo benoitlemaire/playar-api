@@ -17,10 +17,11 @@ class OfferResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'author' => new UserResource($this->whenLoaded('user')),
             'title' => $this->title,
-            'description' => $this->description,
+            'author' => $this->author,
+            'user' => new UserResource($this->whenLoaded('user')),
             'company_logo' => $this->company_logo,
+            'description' => $this->description,
             'apply' =>  UserResource::collection($this->whenLoaded('apply')),
         ];
     }

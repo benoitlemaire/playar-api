@@ -23,7 +23,7 @@ class AuthController extends Controller
      * @return void
      */
     public function __construct() {
-        $this->middleware('auth:api', ['except' => ['login', 'registerFreelance']]);
+        $this->middleware('auth:api', ['except' => ['login', 'registerFreelance' , 'registerCompany']]);
     }
 
     /**
@@ -53,7 +53,7 @@ class AuthController extends Controller
      * Register a Company.
      *
      * @param Request $request
-     * @return JsonResponse
+     * @return UserResource
      */
     public function registerCompany(Request $request) {
         $validator = Validator::make($request->all(), [
@@ -74,17 +74,14 @@ class AuthController extends Controller
         $company->attachRole('company');
 
         Mail::to($company->email)->queue(new SignupCompanyRequest($company));
-        return response()->json([
-            'message' => 'Company creation account successful',
-            'company' => $company
-        ],201);
+        return new UserResource($company);
     }
 
     /**
      * Register a Freelance.
      *
      * @param Request $request
-     * @return JsonResponse
+     * @return UserResource
      */
     public function registerFreelance(Request $request) {
         request()->validate([
@@ -96,7 +93,6 @@ class AuthController extends Controller
             'filter_video' => 'required|mimes:mp4,mov,ogg,qt|max:20000',
             'phone' => 'required|min:10|numeric',
         ]);
-
 
         $pdf_file = $this->storeToS3('pdf', $request->document_freelance);
         $video_file = $this->storeToS3('videos', $request->filter_video);
@@ -114,10 +110,7 @@ class AuthController extends Controller
         $freelance->attachRole('freelance');
 
         Mail::to($freelance->email)->queue(new SignupFreelanceRequest($freelance));
-        return response()->json([
-            'message' => 'Freelance successfully registered',
-            'freelance' => $freelance
-        ],201);
+        return new UserResource($freelance);
     }
 
     /**
@@ -127,7 +120,6 @@ class AuthController extends Controller
      */
     public function logout() {
         auth()->logout();
-
         return response()->json(['message' => 'User successfully signed out']);
     }
 
@@ -146,7 +138,7 @@ class AuthController extends Controller
      * @return UserResource
      */
     public function me() {
-        return new UserResource(auth()->user());
+        return new UserResource(auth()->user()->load('offers', 'applies', 'roles'));
     }
 
     /**

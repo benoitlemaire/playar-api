@@ -3,13 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\OfferResource;
+use App\Http\Resources\UserResource;
 use App\Models\Offer;
 use Exception;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use App\Traits\UploadFile;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Class OfferController
@@ -36,31 +35,27 @@ class OfferController extends Controller
      */
     public function index()
     {
-        $offers = Offer::all();
-        return OfferResource::collection($offers->load('user'));
+        $offers = Offer::paginate(10);
+        return OfferResource::collection($offers);
     }
 
     /**
      * @param Offer $offer
-     * @return JsonResponse
+     * @return UserResource
      */
     public function apply(Offer $offer)
     {
         $user = auth()->user();
 
-        if ($user->myApplies->contains($offer)) {
-            $user->myApplies()->detach($offer->id);
+        if ($user->applies->contains($offer)) {
+            $user->applies()->detach($offer->id);
 
-            return response()->json([
-                'message' => 'Apply removed !'
-            ]);
+            return new UserResource($user->load('applies'));
         }
 
-        $user->myApplies()->attach($offer->id);
+        $user->applies()->attach($offer->id);
 
-        return response()->json([
-            'message' => $user->name . ' successfully applied to offer : ' . $offer->title
-        ]);
+        return new UserResource($user->load('applies'));
     }
 
     /**
@@ -77,12 +72,15 @@ class OfferController extends Controller
             'company_logo' => 'mimes:jpeg,png,|max:1500'
         ]);
 
-        $logo_path = $this->storeToS3('offers', $request->company_logo);
+        if ($request->company_logo) {
+            $logo_path = $this->storeToS3('offers', $request->company_logo);
+        }
 
         $offer = Offer::create([
             'title' => $request->title,
+            'author' => auth()->user()->name,
             'description' => $request->description,
-            'company_logo' => $this->getS3Url($logo_path),
+            'company_logo' => $request->company_logo ? $this->getS3Url($logo_path) : null,
             'user_id' => auth()->user()['id'],
         ]);
 
@@ -97,7 +95,7 @@ class OfferController extends Controller
      */
     public function show(Offer $offer)
     {
-        return new OfferResource($offer->load('user', 'apply'));
+        return new OfferResource($offer->load('apply'));
     }
 
     /**
@@ -109,16 +107,17 @@ class OfferController extends Controller
      */
     public function update(Request $request, Offer $offer)
     {
+        $this->removeS3File($offer->company_logo, 'offers');
 
         if ($request->company_logo) {
-            $this->removeS3File($offer->company_logo, 'offers');
             $logo_path = $this->storeToS3('offers', $request->company_logo);
         }
 
         $offer->update([
             'title' => $request->title,
+            'author' => auth()->user()->name,
             'description' => $request->description,
-            'company_logo' => $logo_path ? $this->getS3Url($logo_path) : null,
+            'company_logo' => $request->company_logo ? $this->getS3Url($logo_path) : null,
             'user_id' => auth()->user()['id'],
         ]);
 
@@ -129,14 +128,17 @@ class OfferController extends Controller
      * Remove the specified resource from storage.
      *
      * @param Offer $offer
-     * @return JsonResponse
+     * @return OfferResource
      * @throws Exception
      */
     public function destroy(Offer $offer)
     {
-        $this->removeS3File($offer->company_logo, 'offers');
+        if ($offer->company_logo) {
+            $this->removeS3File($offer->company_logo, 'offers');
+        }
+
         $offer->delete();
 
-        return response()->json([],200);
+        return new OfferResource($offer);
     }
 }
