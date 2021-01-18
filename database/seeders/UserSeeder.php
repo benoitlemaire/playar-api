@@ -42,6 +42,8 @@ class UserSeeder extends Seeder
                 'email' => $faker->email(),
                 'password' => bcrypt('testtest'),
                 'name' => $faker->name(),
+                'verified' => true
+
             ]);
             $userCompany->attachRole($company);
 

@@ -17,7 +17,7 @@ class ApplySeeder extends Seeder
     public function run()
     {
         for ($i = 0; $i < count(Offer::all()); $i++) {
-            User::all()->random()->myApplies()->attach(Offer::all()->random()->id);
+            User::all()->random()->applies()->attach(Offer::all()->random()->id);
         }
     }
 }
