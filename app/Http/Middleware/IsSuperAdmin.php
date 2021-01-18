@@ -21,6 +21,6 @@ class IsSuperAdmin
            return $next($request);
        }
 
-        return response()->json(['error' => 'Unauthenticated.'], 403);
+        return response()->json(['error' => 'User does not have any of the necessary access rights.'], 403);
     }
 }

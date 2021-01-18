@@ -31,7 +31,7 @@ class User extends Authenticatable implements JWTSubject
         'document_freelance',
         'filter_video',
         'instagram_account',
-        'validated'
+        'verified'
     ];
 
     /**
@@ -51,7 +51,7 @@ class User extends Authenticatable implements JWTSubject
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'validated' => 'boolean'
+        'verified' => 'boolean'
     ];
 
     /**

@@ -34,7 +34,7 @@ class UserSeeder extends Seeder
             'email' => 'benoit.lemaire78@gmail.com',
             'password' => bcrypt('testtest'),
             'name' => 'Benoit Lemaire',
-            'validated' => true
+            'verified' => true
         ]);
 
         for ($i = 0; $i < 50; $i++) {

@@ -23,7 +23,7 @@ class CreateUsersTable extends Migration
             $table->string('instagram_account')->nullable();
             $table->string('filter_video')->nullable();
             $table->string('phone')->nullable();
-            $table->boolean('validated')->default(false);
+            $table->boolean('verified')->default(false);
             $table->rememberToken();
             $table->timestamps();
         });

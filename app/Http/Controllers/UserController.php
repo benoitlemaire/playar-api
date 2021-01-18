@@ -33,7 +33,7 @@ class UserController extends Controller
     public function index()
     {
         $users = User::all();
-        return UserResource::collection($users->load('offers', 'roles'));
+        return UserResource::collection($users->load('offers'));
     }
 
     /**
@@ -45,7 +45,7 @@ class UserController extends Controller
     public function show(User $user)
     {
         return response()->json([
-            'user' => new UserResource($user->load('roles', 'myOffers', 'myApply'))
+            'user' => new UserResource($user->load('roles', 'myOffers', 'myApplies'))
         ],201);
     }
 
@@ -86,7 +86,7 @@ class UserController extends Controller
      */
     public function toggleValidationUser(User $user)
     {
-        $user->validated = !$user->validated;
+        $user->verified = !$user->verified;
         $user->save();
 
         return response()->json($user);
