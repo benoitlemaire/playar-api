@@ -17,8 +17,9 @@ class IsVerified
     public function handle(Request $request, Closure $next)
     {
         $user = auth()->user();
+
         if (!$user->verified) {
-            return response()->json(['error' => 'User does not have any of the necessary access rights.'], 403);
+            return response()->json(['error' => 'User is not verified.'], 403);
         }
 
         return $next($request);

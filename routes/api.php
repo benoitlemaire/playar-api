@@ -33,18 +33,35 @@ Route::group([
 });
 
 // Users
-Route::get('/users', [UserController::class, 'index'])->middleware('IsSuperAdmin');;
+Route::middleware('role:superadmin')
+    ->group(function () {
+        Route::get('/users', [UserController::class, 'index']);
+        Route::post('/toggleUser/{user}', [UserController::class, 'toggleVerifiedUser']);
+    });
+
 Route::get('/users/{user}', [UserController::class, 'show'])->middleware('CanSeeUserProfile');
-Route::post('/toggleUser/{user}', [UserController::class, 'toggleValidationUser']);
-Route::post('/editUser/{user}', [UserController::class, 'update']);
-Route::post('/deleteUser/{user}', [UserController::class, 'destroy']);
+
+Route::middleware('CanManageMyProfile')
+    ->group(function () {
+        Route::post('/editUser/{user}', [UserController::class, 'update']);
+        Route::post('/deleteUser/{user}', [UserController::class, 'destroy']);
+    });
 
 // Offers
 Route::get('/offers', [OfferController::class, 'index']);
 Route::get('/offers/{offer}', [OfferController::class, 'show']);
-Route::post('/offers/', [OfferController::class, 'create']);
-Route::post('/editOffer/{offer}', [OfferController::class, 'update']);
-Route::post('/deleteOffer/{offer}', [OfferController::class, 'destroy']);
+
+Route::middleware(['role:freelance|superadmin|company'])
+    ->group(function () {
+        Route::post('/offers/', [OfferController::class, 'create']);
+        // Can only edit / delete my own offers
+        Route::middleware('IsMyOffer')
+            ->group(function () {
+                Route::post('/editOffer/{offer}', [OfferController::class, 'update']);
+                Route::post('/deleteOffer/{offer}', [OfferController::class, 'destroy']);
+            });
+    });
+
 Route::post('/applyToOffer/{offer}', [OfferController::class, 'apply'])->middleware(['role:freelance|superadmin', 'IsVerified']);
 
 Route::group([
